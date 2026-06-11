@@ -3,7 +3,7 @@
 ## Overview of this 
 This project is a Retrieval-Augmented Generation (RAG) application built with Streamlit, LangChain, OpenAI Embeddings, Chroma Vector Database, and Groq LLM. The application allows users to upload one or more PDF documents and interact with them through natural language conversations.
 
-The system extracts text from uploaded PDFs, converts the content into vector embeddings, stores them in a Chroma vector database, retrieves relevant document chunks based on user queries, and generates context-aware answers using a Groq-powered Large Language Model.
+The system extracts text from uploaded PDFs, converts the content into vector embeddings, stores them in a Chroma vector database, retrieves relevant document chunks based on user queries, and generates context-aware answers using a Groq-powered Large language Models
 
 The application also supports session-based chat history, enabling users to maintain conversational context throughout their interactions.
 
