@@ -4,8 +4,14 @@ import os
 from sentence_transformers import SentenceTransformer
 
 # Initialize embeddings
-embeddings_model = SentenceTransformer("all-MiniLM-L6-v2")
+# Initialize embeddings lazily
+embeddings_model = None
 
+def get_embeddings_model():
+    global embeddings_model
+    if embeddings_model is None:
+        embeddings_model = SentenceTransformer("all-MiniLM-L6-v2")
+    return embeddings_model
 # New Chroma client (v0.4+)
 chroma_client = chromadb.EphemeralClient()
 
@@ -28,7 +34,7 @@ def load_pdf(file_path):
 
 def create_vectorstore(text, session_id):
     chunks = [text[i:i+1000] for i in range(0, len(text), 1000)]
-    embeddings = [embeddings_model.encode(chunk).tolist() for chunk in chunks]
+    embeddings = [get_embeddings_model().encode(chunk).tolist() for chunk in chunks]
     collection = chroma_client.get_or_create_collection(name=f"session_{session_id}")
     collection.add(
         ids=[f"chunk_{i}" for i in range(len(chunks))],

@@ -1,5 +1,5 @@
 import os
-from .rag import get_vectorstore, embeddings_model, get_groq_client
+from .rag import get_vectorstore, get_embeddings_model, get_groq_client
 import httpx
 
 chat_histories = {}
@@ -16,7 +16,7 @@ async def chat_with_rag(message: str, session_id: str):
     
     try:
         collection = get_vectorstore(session_id)
-        query_embedding = embeddings_model.encode(message).tolist()
+        query_embedding = get_embeddings_model().encode(message).tolist()
         print("BEFORE QUERY")
         results = collection.query(query_embeddings=[query_embedding], n_results=3)
         print("AFTER QUERY")
