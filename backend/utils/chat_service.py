@@ -11,15 +11,12 @@ async def chat_with_rag(message: str, session_id: str):
     history = get_chat_history(session_id)
     groq_client = get_groq_client()
     
-    try:
-        response = groq_client.chat.completions.create(
-            model="llama-3.1-70b-versatile",  # ✅ UPDATED MODEL
-            messages=[{"role": "user", "content": message}],
-            max_tokens=500
-        )
-        answer = response.choices[0].message.content
-        history.append({"role": "user", "content": message})
-        history.append({"role": "ai", "content": answer})
-        return {"answer": answer, "source": "llm"}
-    except Exception as e:
-        raise Exception(f"Chat error: {str(e)}")
+    response = groq_client.chat.completions.create(
+        model="llama-3.1-70b-versatile",
+        messages=[{"role": "user", "content": message}],
+        max_tokens=500
+    )
+    answer = response.choices[0].message.content
+    history.append({"role": "user", "content": message})
+    history.append({"role": "ai", "content": answer})
+    return {"answer": answer, "source": "groq"}
