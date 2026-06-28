@@ -9,8 +9,15 @@ embeddings_model = None
 
 def get_embeddings_model():
     global embeddings_model
+
+    print("STEP 1: Entered get_embeddings_model()")
+
     if embeddings_model is None:
+        print("STEP 2: Loading SentenceTransformer model...")
         embeddings_model = SentenceTransformer("all-MiniLM-L6-v2")
+        print("STEP 3: Model loaded successfully!")
+
+    print("STEP 4: Returning model")
     return embeddings_model
 # New Chroma client (v0.4+)
 chroma_client = chromadb.EphemeralClient()
