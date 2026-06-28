@@ -16,9 +16,9 @@ async def chat_with_rag(message: str, session_id: str):
     chunk = get_relevant_chunk(message, session_id)
     if chunk:
         response = groq_client.chat.completions.create(
-            model="llama-3.1-8b-instant",
+            model="openai/gpt-oss-120b",
             messages=[{"role": "user", "content": f"Context: {chunk}\n\nQ: {message}"}],
-            max_tokens=300
+            max_tokens=500
         )
         answer = response.choices[0].message.content
         history.append({"role": "user", "content": message})
@@ -30,9 +30,9 @@ async def chat_with_rag(message: str, session_id: str):
         web = await search_serper(message)
         if web:
             response = groq_client.chat.completions.create(
-                model="llama-3.1-8b-instant",
+                model="openai/gpt-oss-120b",
                 messages=[{"role": "user", "content": f"Search: {web}\n\nQ: {message}"}],
-                max_tokens=300
+                max_tokens=500
             )
             answer = response.choices[0].message.content
             history.append({"role": "user", "content": message})
@@ -43,9 +43,9 @@ async def chat_with_rag(message: str, session_id: str):
     
     # TIER 3: LLM
     response = groq_client.chat.completions.create(
-        model="llama-3.1-8b-instant",
+        model="openai/gpt-oss-120b",
         messages=[{"role": "user", "content": message}],
-        max_tokens=300
+        max_tokens=500
     )
     answer = response.choices[0].message.content
     history.append({"role": "user", "content": message})
