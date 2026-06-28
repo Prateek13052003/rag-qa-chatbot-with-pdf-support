@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 from utils import load_pdf, create_vectorstore, chat_with_rag, get_chat_history
 
 load_dotenv()
-
 app = FastAPI(title="RAG Chatbot API", version="1.0.0")
 
 # CORS
@@ -38,9 +37,9 @@ async def upload_pdf(file: UploadFile = File(...), session_id: str = Form(...)):
         create_vectorstore(documents, session_id)
         os.remove(temp_path)
         
-        return {"message": f"PDF loaded: {file.filename}", "pages": len(documents), "session_id": session_id}
+        return {"message": f"PDF loaded: {file.filename}", "status": "success", "session_id": session_id}
     except Exception as e:
-        return {"error": str(e)}, 400
+        raise HTTPException(status_code=400, detail=str(e))
 
 @app.post("/chat")
 async def chat(request: ChatRequest):
@@ -48,12 +47,14 @@ async def chat(request: ChatRequest):
         result = await chat_with_rag(request.message, request.session_id)
         return result
     except Exception as e:
-        return {"error": str(e)}, 400
+        raise HTTPException(status_code=400, detail=str(e))
 
 @app.get("/history/{session_id}")
-async def get_history(session_id: str):
-    history = get_chat_history(session_id)
-    return {"messages": [{"role": m.type, "content": m.content} for m in history.messages]}
+async def history(session_id: str):
+    try:
+        return {"history": get_chat_history(session_id)}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn
