@@ -1,4 +1,4 @@
-from .rag import get_groq_client, get_vectorstore, get_embeddings_model
+from .rag import get_groq_client, get_relevant_chunk
 from .web_search import search_serper
 
 chat_histories = {}
@@ -13,34 +13,26 @@ async def chat_with_rag(message: str, session_id: str):
     groq_client = get_groq_client()
     
     # TIER 1: PDF
-    try:
-        embeddings_model = get_embeddings_model()
-        query_embedding = embeddings_model.encode(message).tolist()
-        collection = get_vectorstore(session_id)
-        results = collection.query(query_embeddings=[query_embedding], n_results=3)
-        
-        if results["documents"][0]:
-            context = "\n".join(results["documents"][0])
-            response = groq_client.chat.completions.create(
-                model="llama-3.1-8b-instant",
-                messages=[{"role": "user", "content": f"Context:\n{context}\n\nQ: {message}\nAnswer from context only:"}],
-                max_tokens=500
-            )
-            answer = response.choices[0].message.content
-            history.append({"role": "user", "content": message})
-            history.append({"role": "ai", "content": answer})
-            return {"answer": answer, "source": "pdf"}
-    except:
-        pass
+    chunk = get_relevant_chunk(message, session_id)
+    if chunk:
+        response = groq_client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[{"role": "user", "content": f"Context: {chunk}\n\nQ: {message}"}],
+            max_tokens=300
+        )
+        answer = response.choices[0].message.content
+        history.append({"role": "user", "content": message})
+        history.append({"role": "ai", "content": answer})
+        return {"answer": answer, "source": "pdf"}
     
-    # TIER 2: WEB SEARCH
+    # TIER 2: WEB
     try:
-        web_results = await search_serper(message)
-        if web_results:
+        web = await search_serper(message)
+        if web:
             response = groq_client.chat.completions.create(
                 model="llama-3.1-8b-instant",
-                messages=[{"role": "user", "content": f"Based on this search:\n{web_results}\n\nAnswer the question: {message}"}],
-                max_tokens=500
+                messages=[{"role": "user", "content": f"Search: {web}\n\nQ: {message}"}],
+                max_tokens=300
             )
             answer = response.choices[0].message.content
             history.append({"role": "user", "content": message})
@@ -53,7 +45,7 @@ async def chat_with_rag(message: str, session_id: str):
     response = groq_client.chat.completions.create(
         model="llama-3.1-8b-instant",
         messages=[{"role": "user", "content": message}],
-        max_tokens=500
+        max_tokens=300
     )
     answer = response.choices[0].message.content
     history.append({"role": "user", "content": message})

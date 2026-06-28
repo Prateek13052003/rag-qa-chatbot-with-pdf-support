@@ -1,18 +1,10 @@
-import chromadb
 from pypdf import PdfReader
 import os
-from sentence_transformers import SentenceTransformer
+from sklearn.feature_extraction.text import TfidfVectorizer
 
-# Lazy load - only when needed
-_embeddings_model = None
-chroma_client = chromadb.EphemeralClient()
+_tfidf = None
+_documents = {}
 _groq_client = None
-
-def get_embeddings_model():
-    global _embeddings_model
-    if _embeddings_model is None:
-        _embeddings_model = SentenceTransformer("all-MiniLM-L6-v2")
-    return _embeddings_model
 
 def get_groq_client():
     global _groq_client
@@ -29,15 +21,18 @@ def load_pdf(file_path):
     return text
 
 def create_vectorstore(text, session_id):
-    embeddings_model = get_embeddings_model()
-    chunks = [text[i:i+1000] for i in range(0, len(text), 1000)]
-    embeddings = [embeddings_model.encode(chunk).tolist() for chunk in chunks]
-    collection = chroma_client.get_or_create_collection(name=f"session_{session_id}")
-    collection.add(
-        ids=[f"chunk_{i}" for i in range(len(chunks))],
-        embeddings=embeddings,
-        documents=chunks
-    )
+    global _tfidf
+    chunks = [text[i:i+500] for i in range(0, len(text), 500)]
+    _documents[session_id] = chunks
+    _tfidf = TfidfVectorizer(max_features=100)
+    _tfidf.fit(chunks)
 
-def get_vectorstore(session_id):
-    return chroma_client.get_or_create_collection(name=f"session_{session_id}")
+def get_relevant_chunk(message, session_id):
+    if session_id not in _documents:
+        return None
+    chunks = _documents[session_id]
+    if not chunks or not _tfidf:
+        return None
+    scores = _tfidf.transform([message]).toarray()[0]
+    best_idx = scores.argmax() if scores.max() > 0 else -1
+    return chunks[best_idx] if best_idx >= 0 else None
