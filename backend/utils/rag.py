@@ -22,17 +22,28 @@ def load_pdf(file_path):
 
 def create_vectorstore(text, session_id):
     global _tfidf
+    if not text or len(text.strip()) < 10:
+        _documents[session_id] = []
+        return
+    
     chunks = [text[i:i+500] for i in range(0, len(text), 500)]
     _documents[session_id] = chunks
-    _tfidf = TfidfVectorizer(max_features=100)
-    _tfidf.fit(chunks)
+    
+    try:
+        _tfidf = TfidfVectorizer(max_features=100, stop_words='english', min_df=1)
+        _tfidf.fit(chunks)
+    except:
+        _documents[session_id] = []
 
 def get_relevant_chunk(message, session_id):
-    if session_id not in _documents:
+    if session_id not in _documents or not _documents[session_id]:
         return None
     chunks = _documents[session_id]
     if not chunks or not _tfidf:
         return None
-    scores = _tfidf.transform([message]).toarray()[0]
-    best_idx = scores.argmax() if scores.max() > 0 else -1
-    return chunks[best_idx] if best_idx >= 0 else None
+    try:
+        scores = _tfidf.transform([message]).toarray()[0]
+        best_idx = scores.argmax() if scores.max() > 0 else -1
+        return chunks[best_idx] if best_idx >= 0 else None
+    except:
+        return None
