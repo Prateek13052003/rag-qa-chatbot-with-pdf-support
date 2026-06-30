@@ -1,4 +1,4 @@
-# 🚀 RAG Chatbot with Web Search Fallback
+# 🚀 RAG Chatbot with Web Search Fallback 
 
 A production-ready RAG (Retrieval-Augmented Generation) chatbot that combines PDF knowledge with real-time web search.
 
